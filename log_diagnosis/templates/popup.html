@@ -1,0 +1,53 @@
+<div class="popup-overlay" id="popup">
+    <div class="popup-content">
+        <button class="close-button" id="close-popup">&times;</button>
+
+        <h1 style="text-align: center;"> Important Announcement </h1>
+
+        <p> AnalyzeSWSupport <b> doesn't support the following file formats: </b> 
+        <ul> 
+            <li> '.xml' , .bin, .jar files, binary files </li>
+            <li> Archive Files such as '.zip', '.tar', '.gz'. <br> Please <i> unpack </i> the archive and <i> select only relevant files </i> as input.  </li>
+        </ul>          
+        {% if ignored_file_list|length == 0 and processed_file_list|length == 0 %}
+            <h4 style="text-align: center; color:red">No input files found in the input folder</h4>
+        {% else %}
+        <p> The following input files were <u><i>ignored</i></u> by AnalyzeSWSupport: </p>
+        
+            <ul>        
+                {% for file in ignored_file_list[:10] %}
+                    <li> {{ file }} </li>
+                {% endfor %}
+                {% if ignored_file_list|length > 10 %}
+                    <li>...</li>
+                {% endif %}
+            </ul>
+
+            {% if processed_file_list|length > 0 %}
+                <p> The following input files were <u>processed</u> by AnalyzeSWSupport: </p>
+                <ul>
+                {% for file in processed_file_list[:10] %}
+                    <li>{{ file }}</li>
+                {% endfor %}
+                {% if processed_file_list|length > 10 %}
+                    <li>...</li>
+                {% endif %}
+                </ul>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    // This function will run when the window has finished loading
+    window.onload = function() {
+        // Show the pop-up
+        document.getElementById('popup').style.display = 'block';
+    };
+
+    // Add event listener to the close button to hide the pop-up
+    document.getElementById('close-popup').addEventListener('click', function() {
+        document.getElementById('popup').style.display = 'none';
+    });
+
+</script>

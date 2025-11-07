@@ -1,0 +1,10 @@
+.ipynb_checkpoints
+.vscode
+contrib
+.env
+*.zip
+output*
+llm
+examples/
+.models/*
+tmp/

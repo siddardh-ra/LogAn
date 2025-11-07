@@ -1,0 +1,57 @@
+name: "\U0001F4A1 Feature Request: AnalyzeSWSupport"
+description: |
+  Help us enhance AnalyzeSWSupport. 
+  Check for similar requests: [Search existing issues](https://github.ibm.com/log-comprehension/log-diagnosis/issues) before submitting.
+
+labels:
+  - "Feature Enhancement"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 🌟 Feature Request
+
+        ### Summary
+        Briefly describe the feature you want to request.
+
+  - type: textarea
+    id: feature-summary
+    attributes:
+      label: Brief Description
+      description: Describe the feature you want to request.
+      placeholder: Briefly describe the feature.
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Problem Statement
+        What problem will this feature address?
+
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem Statement
+      description: Describe the problem this feature will solve.
+      placeholder: Explain the problem.
+    validations:
+      required: true
+
+
+  - type: markdown
+    attributes:
+      value: |
+        ### Proposed Solution
+        Describe how the feature should work.
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe how the feature should function.
+      placeholder: Explain the solution.
+    validations:
+      required: true
+

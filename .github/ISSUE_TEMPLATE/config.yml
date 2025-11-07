@@ -1,0 +1,14 @@
+blank_issues_enabled: true
+contact_links:
+  - name: "AnalyzeSWSupport Wiki"
+    url: "https://github.ibm.com/log-comprehension/log-diagnosis/wiki/Welcome-to-AnalyzeSWSupport-Wiki-!"
+labels:
+  - "bug"
+  - "feature"
+templates:
+  - title: "🐛 Bug Report"
+    description: "Submit a bug report to help us improve AnalyzeSWSupport."
+    filename: "bug-report.yml"
+  - title: "🌟 Feature Request"
+    description: "Submit a feature request to help us enhance AnalyzeSWSupport."
+    filename: "feature-request.yml"

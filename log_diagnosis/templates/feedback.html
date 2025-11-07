@@ -1,0 +1,120 @@
+<style>
+  .table-timesaved {
+            display: none;
+  }
+  .show {
+      display: table-row;
+  }
+  .td-wrapper {
+    /* display: inline-block; */
+    margin-top: 1rem;
+    max-width: unset;
+    /* float: left; */
+  }
+
+</style>
+<script>
+   document.addEventListener('DOMContentLoaded', function() {
+      const yesRadioButton = document.querySelector('.radio-yes');
+      const noRadioButton = document.querySelector('.radio-no');
+      const timeSavedRow = document.querySelector('.table-timesaved');
+
+      const toggleTimeSavedRow = () => {
+          if (yesRadioButton.checked) {
+              timeSavedRow.classList.add('show');
+          } else {
+              timeSavedRow.classList.remove('show');
+          }
+      };
+
+      yesRadioButton.addEventListener('change', toggleTimeSavedRow);
+      noRadioButton.addEventListener('change', toggleTimeSavedRow);
+
+      toggleTimeSavedRow();
+  });
+</script>
+
+<table class="table-wrapper">
+  <tbody>
+    <tr att1='normal'>
+        <td colspan=8 >
+            Is this tool helpful?
+           <input type='radio' name='helpful' class="radio-yes" value='yes' checked>&nbsp;Yes&nbsp;&nbsp;
+           <input type='radio' name='helpful' class="radio-no"value='no'>&nbsp;No
+        </td>
+    </tr>
+
+    <tr att1='normal' class="table-timesaved" >
+        <td colspan=8 class="td-wrapper">
+            How much time did you save?
+            <input type='radio' name='time_saved' value='more than 30 min' checked>&nbsp;more than 30 min
+            <input type='radio' name='time_saved' value='16 - 30 min'>&nbsp;16 - 30 min&nbsp;&nbsp;
+            <input type='radio' name='time_saved' value='6 - 16 min'>&nbsp;6 - 16 min&nbsp;&nbsp;
+            <input type='radio' name='time_saved' value='1 - 5 min'>&nbsp;1 - 5 min&nbsp;&nbsp;
+            <input type='radio' name='time_saved' value='No tiime saved'>&nbsp;No time saved&nbsp;&nbsp;
+          </td>
+    </tr>
+ 
+    <tr att1='normal'>
+        <td colspan=8 class="td-wrapper">
+          <div class="textarea-label">
+            Any other information that can be added to each window or across windows that can help in diagnosis (this
+            question is not mandatory)
+          </div>
+          <textarea name="suggestion_box" rows="4" cols="50"
+                placeholder="For ex: identifying entities, symptoms, root cause analysis"></textarea>
+        </td>
+    </tr>
+  </tbody>
+  </table>
+
+    <script type="text/javascript">
+        function onSubmit( form ){
+            var form_data = $(form).serializeArray();
+            var case_number = "{{ case_number }}"
+            var product_name = "{{ product_name }}"
+      
+            var feedback = {{ '{}' }}; // Using object literal notation to create an empty object
+            feedback.case_number = case_number;
+            feedback.product_name = product_name;
+            feedback["time_triggered"] = new Date().toISOString();
+      
+            for (var i = 0; i < form_data.length; i++) {
+              var field = form_data[i];
+              feedback[field.name] = field.value;
+            }
+            console.log(feedback);
+            sendStats(feedback);
+            return false;
+          }
+        
+          function sendStats(formData) {
+              
+            // WARNING: For POST requests, body is set to null by browsers.
+            var data = JSON.stringify(formData);
+      
+            var xhr = new XMLHttpRequest();
+            xhr.withCredentials = true;
+      
+            xhr.addEventListener("readystatechange", function() {
+              if(this.readyState === 4) {
+                if (this.status === 200 || this.status === 201) {
+                  alert("Feedback sent successfully !");
+                  var button = document.querySelector('.button.button2');
+                  // Disable the button
+                  button.disabled = true;
+                } else {
+                  alert("Some error occurred while sending feedback");
+                }
+        
+              }
+            });
+      
+            xhr.open("POST", "{{ es_config['host'] }}/{{ es_config['feedback_index'] }}/_doc");
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.setRequestHeader("Authorization", "Basic {{ es_config['token'] }}");
+      
+            xhr.send(data);
+          }  
+
+    </script>

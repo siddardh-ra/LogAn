@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title }}</title>
+<script src="./libs/d3.v7.min.js"></script>
+<script src="./libs/chart.js"></script>
+<script src="./libs/papaparse.min.js"></script>
+<style>
+#causalButtonWrapper {
+    display: inline-block; /* Ensures the container only takes as much width as necessary */
+    position: relative; /* Allows positioning of child elements */
+}
+  /* Add CSS styles for the spinner */
+.spinner {
+  width: 24px; /* Adjust the width to match the button size */
+  height: 24px; /* Adjust the height to match the button size */
+  border: 3px solid #ccc;
+  border-top: 3px solid #3498db;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px; /* Add some margin to separate it from the button */
+  display: none; /* Hide the spinner by default */
+}
+
+/* Add a spinning animation */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.spinner-icon {
+  border: 4px solid rgba(0, 0, 0, 0.3);
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 2s linear infinite;
+}
+
+#tooltip {
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px;
+    border-radius: 5px;
+    pointer-events: none;
+    font-size: 12px;
+}
+
+.hidden {
+    display: none;
+}
+
+    #jsonTable {
+      display: none;
+      width: 100%;
+      border-collapse: collapse;
+    }
+  
+    #jsonTable th, #jsonTable td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+  
+    #jsonTable th {
+      background-color: #f2f2f2;
+    }
+  
+    select {
+      width: 100%;
+      padding: 5px;
+    }
+  
+    #container {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f2f2f2;
+  }
+
+  td {
+    background-color: #fff;
+  }
+
+  select {
+    padding: 6px;
+  }
+
+  /* Additional styles for dropdown */
+  select {
+    background-color: #f2f2f2;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+
+  select:hover {
+    background-color: #e0e0e0;
+  }
+
+  /* Adjust column widths */
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    /* Add width to Golden Signal column */
+    max-width: 200px; /* Adjust as needed */
+  }
+
+  /* Enable text wrapping */
+  td {
+    background-color: #fff;
+    /* Add word wrap and break word properties */
+    word-wrap: break-word;
+    word-break: break-all;
+  }  
+
+   /* Center-align the input elements */
+   #inputContainer {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+  .rounded-border {   
+    border: 0.1in solid gray; /* 1-inch thick border */
+    border-radius: 25px; /* Half of 1 inch to make rounded corners */
+  }
+
+  canvas {
+   display: inline;
+   margin: 50px;
+  }
+
+
+</style>
+<script>
+function show_graph(nodes, edges) {
+      // Create an SVG element
+      var svg = d3.select("#graph")
+      console.log(svg)
+
+
+      // Create a force simulation
+      const simulation = d3.forceSimulation(nodes)
+          .force("link", d3.forceLink(edges).id(d => d.id).distance(100).strength(0.2))
+          .force("charge", d3.forceManyBody())
+          .force("center", d3.forceCenter(svg.attr("width") / 2, svg.attr("height") / 2));
+
+      // Add edges
+      const edgeElements = svg.selectAll(".edge")
+          .data(edges)
+          .enter()
+          .append("line")
+          .attr("class", "edge")
+          .attr("marker-end", "url(#arrow)") // Add arrow marker
+          .style("stroke", "black");
+
+      // Define the arrow marker
+      svg.append("defs").append("marker")
+          .attr("id", "arrow")
+          .attr("viewBox", "0 -5 10 10")
+          .attr("refX", 20) // Controls the arrow position on the line
+          .attr("refY", 0)
+          .attr("markerWidth", 8)
+          .attr("markerHeight", 8)
+          .attr("orient", "auto")
+          .append("path")
+          .attr("d", "M0,-5L10,0L0,5")
+          .style("fill", "black");
+
+      // Add nodes
+      const nodeElements = svg.selectAll(".node")
+        .data(nodes)
+        .enter()
+        .append("circle")
+        .attr("class", "node")
+        .attr("r", 10)
+        .style("fill", d => getColorBasedOnLabel(d.gs))
+        .call(d3.drag()
+            .on("start", function (event, d) {
+                dragStarted(event, d, simulation); // Pass simulation to dragStarted
+            })
+            .on("drag", function (event, d) {
+                dragged(event, d, simulation); // Pass simulation to dragged
+            })
+            .on("end", function (event, d) {
+                dragEnded(event, d, simulation); // Pass simulation to dragEnded
+            }))
+        .on("mouseover", showLabel)
+        .on("mouseout", hideLabel);
+      
+      // Add labels for nodes
+      const labelElements = svg.selectAll(".label")
+          .data(nodes)
+          .enter()
+          .append("text")
+          .attr("class", "label")
+          .attr("dy", -15)
+          // .text(d => d.label)
+          .style("text-anchor", "middle");
+
+      // Update positions on simulation tick
+      simulation.on("tick", () => {
+          edgeElements
+              .attr("x1", d => d.source.x)
+              .attr("y1", d => d.source.y)
+              .attr("x2", d => d.target.x)
+              .attr("y2", d => d.target.y);
+
+          nodeElements
+              .attr("cx", d => d.x)
+              .attr("cy", d => d.y);
+
+          labelElements
+              .attr("x", d => d.x)
+              .attr("y", d => d.y);
+      });
+
+      // Function for showing node label in a tooltip
+      function showLabel(event, d) {
+          const tooltip = d3.select("#tooltip");
+
+          tooltip.html(d.label) // Set the tooltip content
+              .style("left", (event.pageX + 10) + "px") // Position the tooltip to the right of the cursor
+              .style("top", (event.pageY - 20) + "px") // Position the tooltip above the cursor
+              .classed("hidden", false); // Show the tooltip
+      }
+
+      // Function for hiding the tooltip
+      function hideLabel() {
+          d3.select("#tooltip").classed("hidden", true); // Hide the tooltip
+      }
+
+      console.log(simulation)
+    
+}
+// Rest of the show_graph function
+function getColorBasedOnLabel(gs_label) {       
+        if (gs_label === "latency") {
+            return "yellow";
+        } else if (gs_label === "availability") {
+            return "blue";
+        } else if (gs_label === "saturation") {
+            return "green";
+        } else if (gs_label == "traffic"){
+            return "purple";
+        } else if(gs_label == "error"){
+            return "red"
+        } else {
+          return "red"
+        }
+    }
+
+// Functions for drag behavior
+function dragStarted(event, d, simulation) { // Add simulation as a parameter
+      if (!event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+  }
+
+function dragged(event, d, simulation) { // Add simulation as a parameter
+    d.fx = event.x;
+    d.fy = event.y;
+    }
+
+function dragEnded(event, d, simulation) { // Add simulation as a parameter
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+    }
+
+function createBarGraph(data_j){
+    labels_ = []
+    data_error = []
+    data_availability = []
+    data_latency = []
+    data_saturation = []
+    data_traffic = []
+    
+    console.log(data_j)
+    // data_j = JSON.parse(data_['data'])
+    data_j.forEach(function(item, index) {
+      labels_.push(item['start_time'])
+      
+      if ('saturation' in item) {
+        data_saturation.push(Math.log10(item['saturation']))
+      }
+      else{
+        data_saturation.push(0)
+      }
+      
+        if ('traffic' in item) {
+        data_traffic.push(Math.log10(item['traffic']))
+      }
+      else{
+        data_traffic.push(0)
+      }
+      
+      if ('error' in item) {
+        data_error.push(Math.log10(item['error']))
+      }
+      else{
+        data_error.push(0)
+      }
+      
+      if ('availability' in item) {
+        data_availability.push(Math.log10(item['availability']))
+      }
+      else{
+        data_availability.push(0)
+      }
+      
+      if ('latency' in item) {
+        data_latency.push(Math.log10(item['latency']))
+      }
+      else{
+        data_latency.push(0)
+      }   
+  });
+
+    
+        // Sample data for the stacked bar chart
+  const data = {
+      labels: labels_,
+      datasets: [
+          {
+              label: 'Error',
+              data: data_error,
+              backgroundColor: getColorBasedOnLabel('error'),
+          },
+          {
+              label: 'Availability',
+              data: data_availability,
+              backgroundColor: getColorBasedOnLabel('availability'),
+          },
+          {
+              label: 'Latency',
+              data: data_latency,
+              backgroundColor: getColorBasedOnLabel('latency'),
+          },
+          {
+              label: 'Saturation',
+              data: data_saturation,
+              backgroundColor: getColorBasedOnLabel('saturation'),
+          },
+          {
+              label: 'Traffic',
+              data: data_traffic,
+              backgroundColor: getColorBasedOnLabel('traffic'),
+          },
+      ]
+};
+
+// Create a stacked bar chart
+const ctx = document.getElementById('myStackedBarChart').getContext('2d');
+const myStackedBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: data,
+    options: {
+        scales: {
+            x: {
+                stacked: true,
+                  ticks: {
+                    autoSkip: false, // Prevent automatic skipping of labels
+                },
+            },
+            y: {
+                stacked: true,
+            },
+        },
+        plugins: {
+            tooltip: {
+                callbacks: {
+                    label: (context) => {
+                        const index = context.dataIndex;
+                        const datasetIndex = context.datasetIndex;
+                        const actualValue = context.dataset.data[index];
+                        const scaledValue = calculateScaledValue(actualValue);
+                        return `${scaledValue}`;
+                    },
+                },
+            },
+        },
+    },
+});
+}
+
+
+function runCausality(){
+    nodes_arr = {{ graph_nodes }}
+    edges_arr = {{ graph_edges }}
+    show_graph(nodes_arr, edges_arr)
+}
+
+function fetchTemporalData() {
+  temporal_evolution_json = {{ temporal_evolution }}
+  createBarGraph(temporal_evolution_json['data']);
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  // Call runCausality function when the DOM is ready
+  runCausality();
+  fetchTemporalData();
+});
+
+</script>
+</head>
+<body>
+  <!-- <div id="buttonContainerCausality" style="text-align: center; margin-top: 20px;">
+    <div id="causalButtonWrapper">
+      <button id="runCausalButton" onclick="runCausality()" style="display: none; margin: 0 auto; text-align: center; margin-top: 20px;">Run Causal Analysis</button>
+    </div>. -->
+
+    <div id="chart-container"  style="text-align: center;">
+      <h1>Temporal Evolution of Golden Signals</h1>
+      <canvas id="myStackedBarChart"></canvas>
+    </div>
+
+    <div id="svgContainer" style="text-align: center;">
+      <h1>Temporal Causality of Logs</h1>
+      <svg id="graph" width="1800" height="600" class="rounded-border" ></svg> <!--  -->
+    </div>
+  <!-- </div> -->
+
+  <div id="tooltip" class="hidden"></div>
+
+</body>
+</html>

@@ -1,0 +1,154 @@
+
+# LogAn (Log Analyzer)
+
+**Logan** is an intelligent log analysis tool that automatically extracts key insights from log files.
+
+### Key Features
+
+- **🔍 Intelligent Log Parsing**: Utilizes Drain3 algorithm to automatically extract log templates and identify patterns
+- **⚠️ Anomaly Detection**: Identifies unusual log patterns and potential issues using machine learning models
+- **📊 Interactive Reports**: Generates rich HTML reports with visualizations and searchable tables
+
+## How to Run
+
+### Option 1 - Local
+
+```
+# Setup venv
+uv venv
+source .venv/bin/activate
+
+uv pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+uv pip install -r requirements.txt
+
+export OUTPUT_DIR="./tmp/output"
+export MEMORY_FS_ROOT="${OUTPUT_DIR}/pandarallel_cache"
+export TRANSFORMERS_CACHE="${OUTPUT_DIR}/cache"
+
+# clean up
+rm -r "${OUTPUT_DIR}/run"
+rm -r "${OUTPUT_DIR}/log_diagnosis"
+rm -r "${OUTPUT_DIR}/metrics"
+rm -r "${OUTPUT_DIR}/developer_debug_files"
+
+# create dirs
+mkdir -p "${OUTPUT_DIR}/run" 
+mkdir -p "${OUTPUT_DIR}/pandarallel_cache"
+mkdir -p "${OUTPUT_DIR}/test_templates"
+mkdir -p "${OUTPUT_DIR}/log_diagnosis"
+mkdir -p "${OUTPUT_DIR}/developer_debug_files"
+mkdir -p "${OUTPUT_DIR}/metrics"
+
+# to copy libs for log html report
+cp -r ./log_diagnosis/templates/libs "${OUTPUT_DIR}/log_diagnosis"
+
+# Run Log Analysis
+uv run python run_log_diagnosis.py --input_files "./examples/Linux_2k.log" --output_dir "./tmp/output"  2>&1 | tee "${OUTPUT_DIR}/run/log_diagnosis.log"
+
+# To view report
+uv run python -m http.server 8000 --directory "${OUTPUT_DIR}/"
+
+# server should be available at http://localhost:8000/
+```
+
+### Option 2 - Container
+
+`docker.sh` contains wrapper for building and running the LogAn as container.
+
+### Build Container Image
+
+```
+bash docker.sh build
+```
+
+### Running Container Image
+
+1. Execute `docker.sh` as follows: 
+    ```bash
+    bash docker.sh run OUTPUT_DIR PRODUCT_NAME LOG_FILE_PATH TIME_RANGE(OPTIONAL) -ProcessLogFiles(OPTIONAL) -ProcessTxtFiles(OPTIONAL) -DebugMode(OPTIONAL) 
+    ```
+   - OUTPUT_DIR - The directory where the tool's reports are stored
+   - LOG_FILE_PATH - Folders/files separated by colon(:). 
+   - TIME_RANGE - Run analysis only on log lines that fall in the time range determined by the latest date in the data (Allowed values: [1-6]-day, [1-3]-week, 1-month, all-data)
+   - `-ProcessLogFiles` - Enable this to process .LOG files (found in folders). This will not affect .LOG files that you have provided explicitly.
+   - `-ProcessTxtFiles` - Enable this to process .TXT files (found in folders). This will not affect .TXT files that you have provided explicitly.
+   - `-DebugMode` - Enable this flag to store metadata generated during a job for troubleshooting
+
+   Example:
+   ```bash
+       bash docker.sh run ./tmp/output ./examples/Linux_2k.log all-data
+   ```
+   In the above example: 
+   - `./examples/Linux_2k.log` - File
+   - `./tmp/output` - Directory
+
+
+2. After running, you will get the following output:
+```bash
+   OUTPUT_DIR
+   ├── cache
+   │   └── version.txt
+   ├── data
+   │   └── <INPUT_DATA>
+   ├── developer_debug_files
+   │   ├── default_anomalies.csv
+   │   ├── default_anomalies_all_info.csv
+   │   ├── default_anomalies_info.csv
+   │   ├── default_summ_gs_error.csv
+   │   ├── default_summ_gs_info.csv
+   │   ├── default_temp_to_rep_log.json
+   │   └── default_temp_to_signal_map.json
+   ├── inferencing_file
+   │   └── inference.csv
+   ├── log_diagnosis
+   │   ├── default_anomalies.html
+   │   ├── default_anomalies_info.html
+   │   ├── default_summ_gs_error.html
+   │   └── default_summ_gs_info.html
+   ├── logs
+   │   ├── preprocessed_file_epoch-0.log
+   │   ├── preprocessed_file_logs-0.log
+   │   ├── preprocessed_file_names-0.log
+   │   ├── preprocessed_file_timestamps-0.log
+   ├── logs_shards
+   │   ├── discarded_logs_with_none_time.log
+   │   ├── paths_filenames_test_output.log
+   │   └── preprocessed_data.csv
+   ├── matcher_output_test
+   │   └── default_output_matcher.json
+   ├── metrics
+   │   ├── preprocessing.json
+   │   ├── run.json
+   │   └── time.json
+   ├── pandaralle_cache
+   ├── run
+   │   ├── drain_train.log
+   │   ├── input_file_generation.log
+   │   ├── log_diagnosis.log
+   │   ├── preprocess.log
+   │   ├── stats.log
+   │   └── status.log
+   └── test_templates
+       └── tm-test.templates.json
+```
+
+
+3. You can open `OUTPUT_DIR/log_diagnosis/default_summ_gs_error.html` and `OUTPUT_DIR/log_diagnosis/default_anomalies.html` to check the log diagnosis output.
+
+
+## Authors & Contributors
+
+This project was originally developed by **IBM Research** and is actively supported and maintained by **Red Hat**.
+
+### Original Development Team (IBM Research)
+- Karan Bhukar
+- Pranjal Gupta
+- Harshit Kumar
+
+### Maintainers & Contributors (Red Hat)
+- Pradeep Surisetty
+- Rahul Shetty
+
+We welcome contributions from the community! Please see our contribution guidelines for more information.
+
+
