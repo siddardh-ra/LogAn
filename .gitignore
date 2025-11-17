@@ -222,3 +222,4 @@ tmp/
 
 .models/*
 
+.DS_Store

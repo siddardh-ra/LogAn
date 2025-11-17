@@ -1,48 +1,36 @@
 
 # LogAn (Log Analyzer)
 
-**Logan** is an intelligent log analysis tool that automatically extracts key insights from log files.
+**LogAn** is an intelligent log analysis tool that extracts key insights for SREs/Support Engineers/Developers, to identify and diagnose ongoing issues from logs. 
+It generates two reports: 
+(1) Summary Report presents a table of the representative log lines — each with its predicted golden signals and fault categories — along with the frequency of its occurrence. By using this approach, we've found that the tool can reduce the data volume by up to 90%, since most log lines are informational. (2) Diagnosis Report presents a chronologically ordered set of relevant log windows with user-configurable granularity (e.g., 30s, 1m).
+
+
+![Architecture](./docs/asset/Logan%20architecture.png)
+
 
 ### Key Features
 
+![Features](./docs/asset/Logan%20features.png)
+
+<!-- 
 - **🔍 Intelligent Log Parsing**: Utilizes Drain3 algorithm to automatically extract log templates and identify patterns
 - **⚠️ Anomaly Detection**: Identifies unusual log patterns and potential issues using machine learning models
-- **📊 Interactive Reports**: Generates rich HTML reports with visualizations and searchable tables
+- **📊 Interactive Reports**: Generates rich HTML reports with visualizations and searchable tables -->
 
 ## How to Run
 
-### Option 1 - Local
-
-```
-# Setup venv
-uv venv
-source .venv/bin/activate
-
-uv pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
-uv pip install -r requirements.txt
-
-# Run Log Analysis
-export OUTPUT_DIR="./tmp/output"
-
-uv run python run_log_diagnosis.py --input_files "./examples/Linux_2k.log" --output_dir "./tmp/output" --model-type "zero_shot" --model-name "cross-encoder/nli-MiniLM2-L6-H768"
-
-# To view report
-uv run python -m http.server 8000 --directory "${OUTPUT_DIR}/"
-
-# server should be available at http://localhost:8000/log_diagnosis/
-```
-
-### Option 2 - Container
+### Option 1 - Using Containers
 
 `container.sh` contains wrapper for building and running the LogAn as container.
 
-### Build Container Image
+#### Build Container Image
 
 ```
-bash container.sh build
+bash container.sh build ## You can change ENV=docker/podman in the file
 ```
 
-### Running Container Image
+#### Running Container Image
 
 1. Execute `container.sh` as follows: 
     ```bash
@@ -64,7 +52,7 @@ bash container.sh build
    - `./tmp/output` - Directory
 
 
-2. After running, you will get the following output:
+<!-- 2. After running, you will get the following output:
 ```bash
    OUTPUT_DIR
    ├── cache
@@ -114,17 +102,42 @@ bash container.sh build
 ```
 
 
-3. You can open `OUTPUT_DIR/log_diagnosis/default_summ_gs_error.html` and `OUTPUT_DIR/log_diagnosis/default_anomalies.html` to check the log diagnosis output.
+3. You can open `OUTPUT_DIR/log_diagnosis/default_summ_gs_error.html` and `OUTPUT_DIR/log_diagnosis/default_anomalies.html` to check the log diagnosis output. -->
 
+
+### Option 2 - Local
+
+```
+# Setup venv
+uv venv
+source .venv/bin/activate
+
+uv pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+uv pip install -r requirements.txt
+
+# Run Log Analysis
+export OUTPUT_DIR="./tmp/output"
+
+uv run python run_log_diagnosis.py --input_files "./examples/Linux_2k.log" --output_dir "./tmp/output" --model-type "zero_shot" --model-name "cross-encoder/nli-MiniLM2-L6-H768"
+```
+
+
+## How to View the Reports (Output)
+```bash
+uv run python -m http.server 8000 --directory "${OUTPUT_DIR}/log_diagnosis"
+
+# server should be available at http://localhost:8000/
+``` 
 
 ## Authors & Contributors
 
 This project was originally developed by **IBM Research** and is actively supported and maintained by **Red Hat**.
 
 ### IBM Research
-- Karan Bhukar
+
 - Pranjal Gupta
 - Harshit Kumar
+- Prateeti Mohapatra
 
 ### Red Hat
 
