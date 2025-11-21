@@ -132,6 +132,15 @@ uv run python -m http.server 8000 --directory "${OUTPUT_DIR}"
 # server should be available at http://localhost:8000/log_diagnosis
 ``` 
 
+## 🔥 Citation 
+
+If you use LogAn for publication, please cite the following research papers: 
+
+- Pranjal Gupta, Karan Bhukar, Harshit Kumar, Seema Nagar, Prateeti Mohapatra, and Debanjana Kar. 2025. [**Scalable and Efficient Large-Scale Log Analysis with LLMs: An IT Software Support Case Study**](https://arxiv.org/abs/2511.14803). AAAI, 2026.
+
+- Pranjal Gupta, Karan Bhukar, Harshit Kumar, Seema Nagar, Prateeti Mohapatra, and Debanjana Kar. 2025. [**LogAn: An LLM-Based Log Analytics Tool with Causal Inferencing**](https://doi.org/10.1145/3680256.3721246). ICPE, 2025.
+
+
 ## Authors & Contributors
 
 This project was originally developed by **IBM Research** and is actively supported and maintained by **Red Hat**.
