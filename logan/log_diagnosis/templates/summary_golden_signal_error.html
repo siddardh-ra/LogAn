@@ -9,7 +9,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&family=Red+Hat+Text:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./libs/dataTables.dataTables.css">
     <link rel="stylesheet" href="./libs/dataTables.searchHighlight.css">
-    <style>{% include 'static/popup.css' %}</style>
     <style>{% include 'static/summary.css' %}</style>
     <script src="./libs/jquery-latest.min.js"></script>
     <script src="./libs/dataTables.js"></script>
@@ -29,13 +28,20 @@
             </div>
             <div class="pf-v5-c-masthead__content">
                 <h1 class="pf-v5-c-title pf-m-2xl summary-title">Summary Report</h1>
-                <span class="pf-v5-c-badge pf-m-read summary-badge" id="summaryBadge" aria-live="polite">0 log templates</span>
             </div>
         </header>
 
         <main class="pf-v5-c-page__main">
             <section class="summary-stats-dashboard" id="summaryStats" aria-label="Summary statistics">
                 <div class="summary-stat-cards">
+                    <div class="summary-stat-card summary-stat-card--log-lines">
+                        <span class="summary-stat-card__value" id="statLogLines">{% if num_log_lines_display %}{{ num_log_lines_display }}{% else %}—{% endif %}</span>
+                        <span class="summary-stat-card__label">Total log lines</span>
+                    </div>
+                    <div class="summary-stat-card summary-stat-card--file-size">
+                        <span class="summary-stat-card__value" id="statFileSize">{% if file_size_display %}{{ file_size_display }}{% else %}—{% endif %}</span>
+                        <span class="summary-stat-card__label">File size</span>
+                    </div>
                     <div class="summary-stat-card summary-stat-card--total">
                         <span class="summary-stat-card__value" id="statTotal">0</span>
                         <span class="summary-stat-card__label">Total logs</span>
@@ -43,10 +49,6 @@
                     <div class="summary-stat-card summary-stat-card--errors">
                         <span class="summary-stat-card__value" id="statErrors">0</span>
                         <span class="summary-stat-card__label">Errors</span>
-                    </div>
-                    <div class="summary-stat-card summary-stat-card--latency">
-                        <span class="summary-stat-card__value" id="statLatency">0</span>
-                        <span class="summary-stat-card__label">Latency</span>
                     </div>
                     <div class="summary-stat-card summary-stat-card--information">
                         <span class="summary-stat-card__value" id="statInformation">0</span>
@@ -136,8 +138,6 @@
         </div>
     </div>
 
-    {% include 'popup.html' %}
-
     <script>
 (function() {
     const LOG_TRUNCATE_LEN = 500;
@@ -169,10 +169,7 @@
         });
         document.getElementById('statTotal').textContent = df.length;
         document.getElementById('statErrors').textContent = errors;
-        document.getElementById('statLatency').textContent = latency;
         document.getElementById('statInformation').textContent = information;
-        const badge = document.getElementById('summaryBadge');
-        if (badge) badge.textContent = df.length + ' log template' + (df.length !== 1 ? 's' : '');
     }
 
     function populateSelectOptions() {
