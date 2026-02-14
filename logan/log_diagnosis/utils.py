@@ -179,25 +179,60 @@ def get_anomaly_html_str(df_final_anomalies, output_dir):
     
     return rendered_template
 
-def get_summary_html_str(df_for_summary_html, include_golden_signal_dropdown, ignored_file_list, processed_file_list):
+def _format_file_size_bytes(size_bytes):
+    """Format byte count as human-readable string (e.g. 4.0 MB)."""
+    if size_bytes is None or size_bytes < 0:
+        return None
+    for unit, suffix in [(1e9, 'GB'), (1e6, 'MB'), (1e3, 'KB')]:
+        if size_bytes >= unit:
+            return f'{size_bytes / unit:.1f} {suffix}'
+    return f'{size_bytes} B'
+
+
+def _load_preprocessing_metrics(output_dir):
+    """Load num_log_lines_total and file_size_bytes from output_dir/metrics/preprocessing.json if present."""
+    if not output_dir:
+        return None, None, None
+    path = os.path.join(output_dir, 'metrics', 'preprocessing.json')
+    if not os.path.isfile(path):
+        return None, None, None
+    try:
+        with open(path) as f:
+            data = json.load(f)
+        num_lines = data.get('num_log_lines_total')
+        file_size = data.get('file_size_bytes')
+        file_size_display = _format_file_size_bytes(file_size) if file_size is not None else None
+        return num_lines, file_size, file_size_display
+    except (json.JSONDecodeError, OSError):
+        return None, None, None
+
+
+def get_summary_html_str(df_for_summary_html, include_golden_signal_dropdown, ignored_file_list, processed_file_list, output_dir=None):
     """
     Generates an HTML string for the summary report, including details about golden signals and processed files.
-    
+
+    When output_dir is provided, loads preprocessing metrics (total log lines, file size) from
+    output_dir/metrics/preprocessing.json and passes them to the template.
+
     Args:
         df_for_summary_html (pd.DataFrame): DataFrame containing summary data.
         include_golden_signal_dropdown (bool): Whether to include a dropdown for golden signals in the report.
         ignored_file_list (list): List of files that were ignored during processing.
         processed_file_list (list): List of files that were successfully processed.
-    
+        output_dir (str, optional): Output directory; if set, preprocessing metrics are loaded and shown.
+
     Returns:
         str: Rendered HTML string for the summary report.
     """
     # Round coverage values to four decimal places.
     df_for_summary_html = df_for_summary_html[['d_tid', 'text', 'gs', 'd_tid_count', 'coverage', 'file_names']]
     df_for_summary_html['coverage'] = df_for_summary_html['coverage'].apply(lambda val: round(val, 4))
-    
+
     df_for_summary_html['text'] = df_for_summary_html['text'].apply(replace_tags)
-    
+
+    num_log_lines_total, file_size_bytes, file_size_display = _load_preprocessing_metrics(output_dir)
+    num_log_lines_display = f'{num_log_lines_total:,}' if num_log_lines_total is not None else None
+
     # Create a Jinja environment to render the summary HTML template.
     path = os.path.dirname(os.path.abspath(__file__))
     env = Environment(loader=FileSystemLoader(os.path.join(path, 'templates')))
@@ -209,7 +244,11 @@ def get_summary_html_str(df_for_summary_html, include_golden_signal_dropdown, ig
         include_golden_signal_dropdown=include_golden_signal_dropdown,
         ignored_file_list=ignored_file_list,
         processed_file_list=processed_file_list,
-        unique_file_names=sorted(df_for_summary_html['file_names'].unique().tolist())
+        unique_file_names=sorted(df_for_summary_html['file_names'].unique().tolist()),
+        num_log_lines_total=num_log_lines_total,
+        num_log_lines_display=num_log_lines_display,
+        file_size_bytes=file_size_bytes,
+        file_size_display=file_size_display,
     )
 
     return rendered_template

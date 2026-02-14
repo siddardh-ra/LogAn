@@ -230,6 +230,22 @@
   color: var(--gs-information);
 }
 
+.summary-stat-card--log-lines {
+  border-left: 3px solid var(--rh-color-blue-200);
+}
+
+.summary-stat-card--log-lines .summary-stat-card__value {
+  color: var(--rh-color-black-100);
+}
+
+.summary-stat-card--file-size {
+  border-left: 3px solid var(--rh-color-black-200);
+}
+
+.summary-stat-card--file-size .summary-stat-card__value {
+  color: var(--rh-color-black-100);
+}
+
 /* Toolbar - PatternFly toolbar */
 .pf-v5-c-toolbar.summary-toolbar {
   padding: var(--rh-spacer-md) var(--rh-spacer-lg);

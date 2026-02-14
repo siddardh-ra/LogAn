@@ -313,7 +313,7 @@ class Anomaly(Core):
             f.write(html_table)
 
         # Generate the HTML table for the summary report
-        html_table = get_summary_html_str(df_for_summary_html, include_golden_signal_dropdown=True, ignored_file_list=ignored_files, processed_file_list=processsed_files)
+        html_table = get_summary_html_str(df_for_summary_html, include_golden_signal_dropdown=True, ignored_file_list=ignored_files, processed_file_list=processsed_files, output_dir=output_dir)
         with open(os.path.join(log_diagnosis_dir, "summary.html"), "w") as f:
             f.write(html_table)
 
